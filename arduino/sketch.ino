@@ -15,7 +15,7 @@
 WebServer server(80);
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
-char ssidAP[] = "ESP32AP";
+char ssidAP[] = "DAISYESP32AP";
 char passwordAP[] = "12345678";
 IPAddress local_ip(192, 168, 2, 1);
 IPAddress gateway(192, 168, 2, 1);
@@ -27,7 +27,7 @@ const int mqttPort = 1883;
 const char* mqttTopic = "iot/sensors";
 
 // HTTP Settings
-const char* httpServer = "http://localhost/iot_smart_object/db/create_sensor_reading.php"; 
+const char* httpServer = "http://172.20.10.2/iot_smart_object/db/create_sensor_reading.php"; 
 
 // Variables
 DHT dht(DHTPIN, DHTTYPE);
@@ -98,58 +98,27 @@ void Humidity();
 
 void setup() {
   Serial.begin(115200);
+  delay(2000);
   Serial.println("Starting program...");
 
   // Initialize Wi-Fi Access Point
   Serial.println("Setting up Wi-Fi Access Point...");
+  delay(1000);
   WiFi.mode(WIFI_AP);
-  if (WiFi.softAP(ssidAP, passwordAP)) {
-    Serial.println("Wi-Fi Access Point created successfully.");
-  } else {
-    Serial.println("Failed to create Wi-Fi Access Point!");
-  }
-
-  if (WiFi.softAPConfig(local_ip, gateway, subnet)) {
-    Serial.println("Soft AP Config set successfully.");
-  } else {
-    Serial.println("Failed to set Soft AP Config!");
-  }
-  Serial.println("Done setting up access point.");
-
+  WiFi.softAP(ssidAP, passwordAP);
+  WiFi.softAPConfig(local_ip, gateway, subnet);
+  Serial.println("Initialize Web Server Routes...");
+  delay(1000);
   // Initialize Web Server Routes
-  Serial.println("Setting up web server routes...");
-  server.on("/", []() { 
-    Serial.println("Serving main page.");
-    server.send(200, "text/html", mainPage()); 
-  });
-  server.on("/settings", []() { 
-    Serial.println("Serving settings page.");
-    server.send(200, "text/html", settingsPage()); 
-  });
-  server.on("/togglePosting", []() { 
-    Serial.println("Toggling posting method.");
-    togglePostingMethod(); 
-  });
-  server.on("/toggleFanMode", []() { 
-    Serial.println("Toggling fan mode.");
-    toggleFanMode(); 
-  });
-  server.on("/manualFanOn", []() { 
-    Serial.println("Turning manual fan on.");
-    setManualFanState(true); 
-  });
-  server.on("/manualFanOff", []() { 
-    Serial.println("Turning manual fan off.");
-    setManualFanState(false); 
-  });
-  server.on("/setTemp", []() { 
-    Serial.println("Updating trigger temperature.");
-    updateTriggerTemperature(); 
-  });
-  server.on("/setNode", []() { 
-    Serial.println("Updating node.");
-    updateNode(); 
-  });
+  server.on("/", []() { server.send(200, "text/html", mainPage()); });
+  server.on("/settings", []() { server.send(200, "text/html", settingsPage()); });
+  server.on("/togglePosting", togglePostingMethod);
+  server.on("/toggleFanMode", toggleFanMode);
+  server.on("/manualFanOn", []() { setManualFanState(true); });
+  server.on("/manualFanOff", []() { setManualFanState(false); });
+  server.on("/setTemp", updateTriggerTemperature);
+
+  server.begin();
 
   // Initialize Pins
   Serial.println("Initializing pins...");
@@ -164,10 +133,6 @@ void setup() {
   dht.begin();
   Serial.println("DHT sensor initialized.");
 
-  Serial.println("Starting web server...");
-  server.begin();
-  Serial.println("Web server started.");
-
   Serial.println("Setting up MQTT client...");
   mqttClient.setServer(mqttServer, mqttPort);
   Serial.println("MQTT client setup complete.");
@@ -178,8 +143,21 @@ void setup() {
 
 // Loop Function
 void loop() {
+
+  static long previousServerMillis = 0;
+  const long serverInterval = 500; // Check server every 50ms
+
   blinkHeartbeat();        // Blink Heartbeat LED
-  server.handleClient();   // Handle Web Server Requests
+
+  // Handle server requests at intervals
+  long currentMillis = millis();
+  if (currentMillis - previousServerMillis >= serverInterval) {
+    previousServerMillis = currentMillis;
+    server.handleClient(); // Handle Web Server Requests
+  }
+
+  
+  // server.handleClient();   // Handle Web Server Requests
   readSensors();           // Periodically Read Sensors
 
   if (fanMode == "AUTO" && temperature >= triggerTemperature) {
@@ -204,7 +182,7 @@ void readSensors() {
     return;
   }
 
-  Serial.printf("Temp: %.2f°C, Hum: %.2f%%, Light: %d\n", temperature, humidity, lightIntensity);
+  
 }
 
 
@@ -218,7 +196,8 @@ void LDR(){
   if (current-previous>=desiredInterval){
     lightIntensity = analogRead(LDRPIN); // take the ldr reading
     previous=current;  
-    Serial.println(lightIntensity);
+    // Serial.println(lightIntensity);
+    Serial.printf("Light: %d\n", lightIntensity);
 
     String jsonPayload = "{";
     jsonPayload += "\"node_id\":" + node + ",";
@@ -250,6 +229,7 @@ void Temperature(){
     jsonPayload += "}";
 
     postData(jsonPayload);
+    Serial.printf("Temp: %.2f°C", temperature);
   }
 }
 
@@ -271,41 +251,35 @@ void Humidity(){
     jsonPayload += "}";
 
     postData(jsonPayload);
+    Serial.printf("Hum: %.2f%%", humidity);
   }
 }
 
 
 
 
-
-// Function to blink LED twice every 2 seconds
 void blinkHeartbeat() {
-    int ledState = LOW;    // Current state of the LED
-    int blinkCount = 0;    // Count of blinks in the current cycle
-    long previousMillis = 0; // Time tracker
-    const long interval = 500; // Interval for each blink (500ms for on/off)
-    static long cycleStartMillis = 0; // Start time of the 2-second cycle
-    long currentMillis = millis();
+  static long previousMillis = 0;     // Time tracker for LED toggling
+  const long waitInterval = 2000;     // Wait time between cycles (2 seconds)
+  long currentMillis = millis();      // Get the current time
 
-  // Check if 2 seconds have passed since the cycle started
-  if (currentMillis - cycleStartMillis >= 2000) {
-    cycleStartMillis = currentMillis; // Reset the cycle
-    blinkCount = 0;                   // Reset blink count
+  // If 2 seconds have passed, start a new cycle
+  if (currentMillis - previousMillis >= waitInterval) {
+    previousMillis = currentMillis; // Reset the cycle start time
+    // blinkCount = 0;                   // Reset the blink count
+    digitalWrite(LEDPIN, HIGH); // Set the LED state
+    delay(70);
+    digitalWrite(LEDPIN, LOW); // Set the LED state
+    delay(70);
+    digitalWrite(LEDPIN, HIGH); // Set the LED state
+    delay(70);
+    digitalWrite(LEDPIN, LOW); // Set the LED state
   }
 
-  // Handle LED blinking
-  if (blinkCount < 4) { // Each blink (on/off) takes 500ms, so 4 changes make 2 blinks
-    if (currentMillis - previousMillis >= interval) {
-      previousMillis = currentMillis; // Update the last time the LED changed state
-      ledState = !ledState;           // Toggle LED state
-      digitalWrite(LEDPIN, ledState); // Set the LED state
-      blinkCount++;                   // Increment blink count
-    }
-  } else {
-    // Ensure the LED is off after blinking
-    digitalWrite(LEDPIN, LOW);
-  }
+  
 }
+
+
 
 // Function to Post Data Based on Method
 void postData(String jsonPayload) {
@@ -325,6 +299,7 @@ void sendHTTP(String jsonPayload) {
   http.addHeader("Content-Type", "application/json");
 
 
+  Serial.println(jsonPayload);
   int httpResponseCode = http.POST(jsonPayload);
 
   if (httpResponseCode > 0) {
@@ -363,7 +338,7 @@ void setupMQTT() {
       Serial.println("Connected to MQTT Broker!");
     } else {
       Serial.print("MQTT Connection Failed. Retrying in 5 seconds...");
-      delay(5000);
+      delay(500);
     }
   }
 }
