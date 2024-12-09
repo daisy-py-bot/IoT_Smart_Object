@@ -17,6 +17,11 @@ WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 char ssidAP[] = "DAISYESP32AP";
 char passwordAP[] = "12345678";
+
+const char* sta_ssid = "Daisy";       // Wi-Fi network to connect to
+const char* sta_password = "dkt11.pyy"; // Wi-Fi network password
+
+
 IPAddress local_ip(192, 168, 2, 1);
 IPAddress gateway(192, 168, 2, 1);
 IPAddress subnet(255, 255, 255, 0);
@@ -98,6 +103,17 @@ void Humidity();
 
 void setup() {
   Serial.begin(115200);
+
+  WiFi.begin(sta_ssid, sta_password);
+    Serial.println("Connecting to Wi-Fi...");
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+        Serial.print(".");
+    }
+    Serial.println("\nConnected to Wi-Fi");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+
   delay(2000);
   Serial.println("Starting program...");
 
@@ -200,7 +216,7 @@ void LDR(){
     Serial.printf("Light: %d\n", lightIntensity);
 
     String jsonPayload = "{";
-    jsonPayload += "\"node_id\":" + node + ",";
+    jsonPayload += "\"node_id\":\"" + String(node) + "\",";
     jsonPayload += "\"sensor_id\":\"light\","; 
     jsonPayload += "\"sensor_value\":" + String(lightIntensity);
     jsonPayload += "}";
@@ -223,7 +239,7 @@ void Temperature(){
     previous=current;
 
     String jsonPayload = "{";
-    jsonPayload += "\"node_id\":" + node + ",";
+    jsonPayload += "\"node_id\":\"" + String(node) + "\",";
     jsonPayload += "\"sensor_id\":\"temp\","; 
     jsonPayload += "\"sensor_value\":" + String(temperature);
     jsonPayload += "}";
@@ -245,7 +261,7 @@ void Humidity(){
     previous=current;
 
     String jsonPayload = "{";
-    jsonPayload += "\"node_id\":" + String(node) + ",";      // Convert node to a String
+    jsonPayload += "\"node_id\":\"" + String(node) + "\",";      // Convert node to a String
     jsonPayload += "\"sensor_id\":\"humidity\",";           // Add quotes around "humidity"
     jsonPayload += "\"sensor_value\":" + String(humidity);  // Convert humidity to a String
     jsonPayload += "}";
@@ -302,11 +318,12 @@ void sendHTTP(String jsonPayload) {
   Serial.println(jsonPayload);
   int httpResponseCode = http.POST(jsonPayload);
 
-  if (httpResponseCode > 0) {
-    Serial.printf("HTTP Response: %d\n", httpResponseCode);
-  } else {
-    Serial.printf("HTTP POST Failed: %s\n", http.errorToString(httpResponseCode).c_str());
-  }
+  Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+
+    Serial.print("body: ");
+    Serial.println(jsonPayload);
+
 
   http.end();
 }
