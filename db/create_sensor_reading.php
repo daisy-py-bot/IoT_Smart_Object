@@ -53,7 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         http_response_code(400); // 400 Bad Request
         echo json_encode(['status' => 'error', 'message' => 'Invalid or missing data']);
     }
-} else {
+} 
+else {
     // Return error response for invalid request method
     http_response_code(405); // 405 Method Not Allowed
     echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
