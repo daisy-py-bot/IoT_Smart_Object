@@ -7,10 +7,13 @@ error_reporting(E_ALL);
 include 'config.php';
 
 // Include CORS headers
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: access-control-allow-origin, content-type");
-header("Access-Control-Allow-Methods: POST");
-header("Content-Type: application/json; charset=UTF-8");
+// header("Access-Control-Allow-Origin: *");
+// header("Access-Control-Allow-Headers: access-control-allow-origin, content-type");
+// header("Access-Control-Allow-Methods: POST");
+// header("Content-Type: application/json; charset=UTF-8");
+
+// Set content type for JSON response
+header('Content-Type: application/json');
 
 // Check the request method
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -53,7 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         http_response_code(400); // 400 Bad Request
         echo json_encode(['status' => 'error', 'message' => 'Invalid or missing data']);
     }
-} else {
+} 
+else {
     // Return error response for invalid request method
     http_response_code(405); // 405 Method Not Allowed
     echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
