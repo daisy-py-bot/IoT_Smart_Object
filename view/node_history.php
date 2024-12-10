@@ -62,7 +62,10 @@
                     <a class="nav-link" href="add_node.php">Add Node</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" href="node_history.php">View Node</a>
+                    <a class="nav-link active" aria-current="page" href="node_history.php">View Node</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link"  href="predict_temperature.php">Model</a>
                 </li>
             </ul>
         </div>

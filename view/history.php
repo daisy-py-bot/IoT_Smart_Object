@@ -67,6 +67,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="node_history.php">View Node</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="predict_temperature.php">Model</a>
+                </li>
             </ul>
         </div>
     </div>

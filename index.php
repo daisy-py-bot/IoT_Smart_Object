@@ -109,6 +109,9 @@ include 'config.php';
                 <li class="nav-item">
                     <a class="nav-link" href="view/node_history.php">View Node</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="view/predict_temperature.php">Model</a>
+                </li>
             </ul>
         </div>
     </div>
@@ -165,6 +168,18 @@ include 'config.php';
                     </div>
                 </div>
             </div>
+
+            <!-- <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        Temperature Prediction
+                    </div>
+                    <div class="card-body">
+                        <p>Get the temperature predictions based on the current time, location, humidity and light intensity</p>
+                        <a href="view/node_history.php" class="btn btn-primary">View Data</a>
+                    </div>
+                </div>
+            </div> -->
         </div>
     </div>
 

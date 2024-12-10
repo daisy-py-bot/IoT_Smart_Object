@@ -32,7 +32,7 @@
             margin-bottom: 8px;
             font-weight: bold;
         }
-        input, textarea, button {
+        input, select, textarea, button {
             width: 100%;
             margin-bottom: 15px;
             padding: 8px;
@@ -89,7 +89,11 @@
         <textarea id="node_description" name="node_description" placeholder="Enter Node Description" rows="3" required></textarea>
 
         <label for="location">Location:</label>
-        <input type="text" id="location" name="location" placeholder="Enter Location" required />
+        <select id="location" name="location" required>
+            <option value="" disabled selected>Select Location</option>
+            <option value="Indoors">Indoors</option>
+            <option value="Outdoors">Outdoors</option>
+        </select>
 
         <button type="submit">Add Node</button>
         <button type="button" class="back-button" onclick="goBack()">Back to Index</button>
