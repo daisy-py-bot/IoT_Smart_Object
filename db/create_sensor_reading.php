@@ -12,9 +12,6 @@ include 'config.php';
 // header("Access-Control-Allow-Methods: POST");
 // header("Content-Type: application/json; charset=UTF-8");
 
-// Set content type for JSON response
-header('Content-Type: application/json');
-
 // Check the request method
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get the data from the request
