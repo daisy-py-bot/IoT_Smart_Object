@@ -7,10 +7,10 @@ error_reporting(E_ALL);
 include 'config.php';
 
 // Include CORS headers
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: access-control-allow-origin, content-type");
-header("Access-Control-Allow-Methods: POST");
-header("Content-Type: application/json; charset=UTF-8");
+// header("Access-Control-Allow-Origin: *");
+// header("Access-Control-Allow-Headers: access-control-allow-origin, content-type");
+// header("Access-Control-Allow-Methods: POST");
+// header("Content-Type: application/json; charset=UTF-8");
 
 // Check the request method
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
